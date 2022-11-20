@@ -35,14 +35,10 @@ func tickerPrice(w http.ResponseWriter, r *http.Request) {
 		}
 
 		var wg sync.WaitGroup
-		var wgConsumer sync.WaitGroup
-
-		wgConsumer.Add(1)
 
 		q := make(chan tickerPriceResult)
 
 		go func() {
-			defer wgConsumer.Done()
 			for res := range q {
 				result[res.ticker]["closing_price"] = res.price
 			}
@@ -59,7 +55,6 @@ func tickerPrice(w http.ResponseWriter, r *http.Request) {
 		wg.Wait()
 		close(q)
 
-		wgConsumer.Wait()
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		jsonData, err := json.Marshal(result)
